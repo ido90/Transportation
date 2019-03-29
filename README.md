@@ -28,4 +28,3 @@ https://github.com/hasadna/open-bus/issues/156
 data:
 https://drive.google.com/drive/folders/1uGbutPLIm1cnLUy3-q8QJEaDyoQ4tCHK
 
-Good
