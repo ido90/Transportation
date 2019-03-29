@@ -11,9 +11,9 @@ class Drive:
         self.points = points
 
 def to_meters(lat,lon):
-    # aprox
-    # earth radius = 6400km
-    # cos(34 degrees) = 0.83
+    # Approximations:
+    # earth radius ~ 6400km
+    # cos(34 degrees) ~ 0.83
     return ((lat - 32) / 180 * np.pi * 6400000,
             (lon - 34) / 180 * np.pi * 6400000 * 0.83)
 
@@ -52,13 +52,15 @@ def show_lines(lines, drive=None, verbose=0, dynamic=False, grid=True,
         if verbose>=2:
             print(l.id,colors[i%len(colors)])
         y,x = zip(*l.nodes[:line_nodes])
-        ax.plot(x, y, colors[i%len(colors)]+'-')
-        ax.plot(x[0], y[0], colors[i%len(colors)]+'o')
-        ax.plot(x[-1], y[-1], colors[i%len(colors)]+'x')
-        if grid and drive:
-            y,x = zip(*drive.points[:drive_points])
-            ax.plot(x, y, 'k.')
-            ax.plot(x[0], y[0], 'ks')
+        ax.plot(np.array(x)/1e3, np.array(y)/1e3, colors[i%len(colors)]+'-')
+        ax.plot(x[0]/1e3, y[0]/1e3, colors[i%len(colors)]+'o')
+        ax.plot(x[-1]/1e3, y[-1]/1e3, colors[i%len(colors)]+'x')
+        if grid:
+            ax.set_title('Shape ID & Route ID: '+l.id, fontsize=10)
+            if drive:
+                y,x = zip(*drive.points[:drive_points])
+                ax.plot(x, y, 'k.')
+                ax.plot(x[0], y[0], 'ks')
         if dynamic:
             draw()
             input('press enter...')
@@ -70,5 +72,5 @@ def show_lines(lines, drive=None, verbose=0, dynamic=False, grid=True,
 
 if __name__ == '__main__':
     ll = load_lines()
-    show_lines(ll[5:8], grid=0, verbose=2)
+    show_lines(ll)
     plt.show()

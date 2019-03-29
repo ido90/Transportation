@@ -118,7 +118,7 @@ class BusSystem:
         ax.set_xlabel('Trip ID')
         ax.set_ylabel('MSE [m]')
         ax.set_xticks(tuple(range(n)))
-        ax.set_xticklabels(self.drives['id'], fontsize=10)
+        ax.set_xticklabels(self.drives['id'], fontsize=14)
         if vertical_xlabs:
             for tick in ax.get_xticklabels():
                 tick.set_rotation(90)
@@ -169,10 +169,12 @@ class Interval:
 
 if __name__ == '__main__':
     ll = D.load_lines()
+    print(f'Number of lines: {len(ll):d}')
     dd = D.load_drives()
+    print(f'Number of drive: {len(dd):d}')
     b = BusSystem(ll)
-    x = [b.assign_drive(d) for d in dd[:5]]
+    x = [b.assign_drive(d) for d in dd[:20]]
     b.show_drives_errors()
-    D.show_lines(ll, dd[2], verbose=2)
+    D.show_lines(ll, dd[2])
     D.show_lines(ll, dd[2], line_nodes=100, drive_points=7)
     plt.show()
