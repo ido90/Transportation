@@ -123,6 +123,7 @@ class BusSystem:
         axs[0].set_xlabel('Drive Percentile [%]', fontsize=12)
         axs[0].set_ylabel('RMSE', fontsize=12)
         axs[0].set_xlim([0,100])
+        axs[0].set_yscale('log')
         axs[1].plot(x, sorted([self.drives[k]['certainty']
                                for k in self.drives]))
         axs[1].set_title('Certainties Distribution Summary', fontsize=14)
@@ -147,7 +148,8 @@ class BusSystem:
 
             f, axs = plt.subplots(1, 2)
             x = 100 * np.array(list(range(len(self.drives)))) / len(self.drives)
-            axs[0].plot(x, sorted([len(d.points) for d in drives if d.id in ids]))
+            axs[0].plot(x, sorted([len(d.points) for d in drives if d.id in ids]),
+                        'k-' if len(ids)>1 else 'ko')
             axs[0].set_title('Trips with Inconsistent Route-ID Assignment',
                              fontsize=14)
             axs[0].set_xlabel('Drive Percentile [%]', fontsize=12)
@@ -158,7 +160,8 @@ class BusSystem:
                 [next(self.drives[i]['res'][0][j][0] for j in range(len(self.lines))
                       if self.drives[i]['res'][0][j][1].endswith(i.split()[1]))
                  for i in ids])
-            axs[1].plot(x, sorted([1-m1/m2 for m1,m2 in zip(mse1,mse2)]))
+            axs[1].plot(x, sorted([1-m1/m2 for m1,m2 in zip(mse1,mse2)]),
+                        'k-' if len(ids)>1 else 'ko')
             axs[1].set_title('Trips with Inconsistent Route-ID Assignment',
                              fontsize=14)
             axs[1].set_xlabel('Drive Percentile [%]', fontsize=12)
@@ -250,6 +253,6 @@ def main(test=False, fetch_only=True, n=3000, res_path='output/res.pkl'):
         b.summarize_inconsistencies(dd)
 
 if __name__ == '__main__':
-    main(test=False, fetch_only=False, n=3000)
-    main(test=True, fetch_only=False, n=3000, res_path='output/test.res.pkl')
+    main(test=False, fetch_only=True, n=3000)
+    main(test=True, fetch_only=True, n=3000, res_path='output/test.res.pkl')
     plt.show()
