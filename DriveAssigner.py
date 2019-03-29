@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import Data as D
+from time import time
 
 '''
 TODO:
@@ -75,9 +76,9 @@ def draw():
 class BusSystem:
     def __init__(self, lines):
         self.lines = lines # BusLines
-        self.drives = {'id':[], 'mse1':[], 'mse2':[], 'mse3':[]}
+        self.drives = {}
 
-    def assign_drive(self, drive):
+    def assign_drive(self, drive, save_full_res=True):
         '''
         drive: a list of tuples (x,y) representing the observed locations.
         return: line numbers (sorted by probability), corresponding probabilities of bus lines,
@@ -86,10 +87,10 @@ class BusSystem:
         errs = sorted(self.drive_inconsistencies(drive.points))
         errs_route_ids = [ id.split(' ')[1] for score,id in errs ]
         ferrs = [ e for i,(e,id) in enumerate(zip(errs,errs_route_ids)) if id not in set(errs_route_ids[:i]) ]
-        self.drives['id'].append(drive.id)
-        self.drives['mse1'].append(ferrs[0])
-        self.drives['mse2'].append(ferrs[1])
-        self.drives['mse3'].append(ferrs[2])
+        # save results
+        self.drives[drive.id] = {'sid': ferrs[0][1].split()[0], 'rid': ferrs[0][1].split()[1],
+                                 'mse': ferrs[0][0], 'certainty': 1-ferrs[0][0]/ferrs[1][0],
+                                 'res': (errs,ferrs) if save_full_res else None}
         return errs
         #probs,err = self.errors_to_probs(self.drive_inconsistencies(drive))
         #line_numbers,probs = (list(l) for l in zip(*sorted(zip(self.line_numbers,probs))))
@@ -107,20 +108,22 @@ class BusSystem:
     def drive_inconsistencies(self, drive):
         return [(bus_line.drive_inconsistency(drive), bus_line.id) for bus_line in self.lines]
 
-    def show_drives_errors(self, n=np.inf, vertical_xlabs=True):
-        n = n if n<=len(self.drives['id']) else len(self.drives['id'])
+    def show_drives_errors(self, n=np.inf, n_fits=3, vertical_xlabs=True):
+        n = n if n<=len(self.drives) else len(self.drives)
         f, axs = plt.subplots(1, 1)
         ax = axs
-        ax.bar(tuple(range(n)), [m[0] for m in self.drives['mse3'][:n]],
-               color='red', label='3rd best')
-        ax.bar(tuple(range(n)), [m[0] for m in self.drives['mse2'][:n]],
-               color='yellow', label='2nd best')
-        ax.bar(tuple(range(n)), [m[0] for m in self.drives['mse1'][:n]],
+        if n_fits>=3:
+            ax.bar(tuple(range(n)), [self.drives[k]['res'][1][2][0] for k in list(self.drives.keys())[:n]],
+                   color='red', label='3rd best')
+        if n_fits>=2:
+            ax.bar(tuple(range(n)), [self.drives[k]['res'][1][1][0] for k in list(self.drives.keys())[:n]],
+                   color='yellow', label='2nd best')
+        ax.bar(tuple(range(n)), [self.drives[k]['res'][1][0][0] for k in list(self.drives.keys())[:n]],
                color='green', label='best fit')
         ax.set_xlabel('Trip ID')
         ax.set_ylabel('MSE [m]')
         ax.set_xticks(tuple(range(n)))
-        ax.set_xticklabels(self.drives['id'], fontsize=14)
+        ax.set_xticklabels(self.drives.keys(), fontsize=14)
         if vertical_xlabs:
             for tick in ax.get_xticklabels():
                 tick.set_rotation(90)
@@ -170,13 +173,20 @@ class Interval:
             return norm2(da) - t*t / self.ba_2
 
 if __name__ == '__main__':
+    t0 = time()
     ll = D.load_lines()
-    print(f'Number of lines: {len(ll):d}')
+    print('Number of lines: {0:d}.'.format(len(ll)))
     dd = D.load_drives()
-    print(f'Number of drive: {len(dd):d}')
+    print('Number of drive: {0:d}'.format(len(dd)))
+    print('Data loaded ({0:.0f} [s]).'.format(time()-t0))
+    n = 2
+    print('Drives to assign: {0:d}.'.format(n))
     b = BusSystem(ll)
-    x = [b.assign_drive(d) for d in dd[:20]]
+    x = [b.assign_drive(d) for d in dd[:n]]
+    print('Drives assigned ({0:.0f} [s]).'.format(time()-t0))
     b.show_drives_errors()
+    b.show_drives_errors(n_fits=2)
+    b.show_drives_errors(n_fits=1)
     D.show_lines(ll, dd[2])
     D.show_lines(ll, dd[2], line_nodes=100, drive_points=7)
     plt.show()

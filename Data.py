@@ -52,20 +52,26 @@ def show_lines(lines, drive=None, verbose=0, dynamic=False, grid=True,
         if verbose>=2:
             print(l.id,colors[i%len(colors)])
         y,x = zip(*l.nodes[:line_nodes])
-        ax.plot(np.array(x)/1e3, np.array(y)/1e3, colors[i%len(colors)]+'-')
-        ax.plot(x[0]/1e3, y[0]/1e3, colors[i%len(colors)]+'o')
-        ax.plot(x[-1]/1e3, y[-1]/1e3, colors[i%len(colors)]+'x')
+        x = np.array(x) / 1e3
+        y = np.array(y) / 1e3
+        ax.plot(np.array(x), np.array(y), colors[i%len(colors)]+'-')
+        ax.plot(x[0], y[0], colors[i%len(colors)]+'o')
+        ax.plot(x[-1], y[-1], colors[i%len(colors)]+'x')
         if grid:
             ax.set_title('Shape ID & Route ID: '+l.id, fontsize=10)
             if drive:
                 y,x = zip(*drive.points[:drive_points])
-                ax.plot(x, y, 'k.')
+                x = np.array(x) / 1e3
+                y = np.array(y) / 1e3
+                ax.plot(np.array(x), np.array(y), 'k.')
                 ax.plot(x[0], y[0], 'ks')
         if dynamic:
             draw()
             input('press enter...')
     if (not grid) and drive:
         y, x = zip(*drive.points[:drive_points])
+        x = np.array(x) / 1e3
+        y = np.array(y) / 1e3
         axs.plot(x, y, 'k.')
         axs.plot(x[0], y[0], 'ks')
     draw()
