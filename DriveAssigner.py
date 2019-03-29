@@ -60,8 +60,7 @@ total computations:       ~1e11
 '''
 
 class BusSystem:
-    def __init__(self, line_numbers, lines):
-        self.line_numbers = line_numbers # ints
+    def __init__(self, lines):
         self.lines = lines # BusLines
 
     def assign_drive(self, drive):
@@ -70,8 +69,9 @@ class BusSystem:
         return: line numbers (sorted by probability), corresponding probabilities of bus lines,
                 and plausibility of drive wrt most probable bus line.
         '''
-        probs,err = self.errors_to_probs(self.drive_inconsistencies(drive))
+        return(sorted(self.drive_inconsistencies(drive)))
         # TODO how do I know if it sorts by probs or by line numbers??
+        probs,err = self.errors_to_probs(self.drive_inconsistencies(drive))
         line_numbers,probs = (list(l) for l in zip(*sorted(zip(self.line_numbers,probs))))
         return (line_numbers, probs, err)
 
@@ -84,7 +84,7 @@ class BusSystem:
         return (p, np.sqrt(smallest_inconsistency))
 
     def drive_inconsistencies(self, drive):
-        return [bus_line.drive_inconsistency(drive) for bus_line in self.lines]
+        return [(bus_line.drive_inconsistency(drive), bus_line.id) for bus_line in self.lines]
 
 class BusLine:
     def __init__(self, id, nodes):
