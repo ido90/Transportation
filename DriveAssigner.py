@@ -101,13 +101,29 @@ class BusLine:
         return np.min([line.sdistance(point) for line in self.intervals if line.within(point)] +
                       [(point[0]-node[0])**2+(point[1]-node[1])**2 for node in self.nodes])
 
-class Interval:
-    def __init__(self, x, y):
-        pass # TODO x=(x1,x2), y=(y1,y2); should represent the line conveniently for the other methods
+def subtract(p1, p2):
+    return (p1[0] - p2[0], p1[1] - p2[1])
+def inner_product(p1, p2):
+    return p1[0]*p2[0] + p1[1]*p2[1]
+def norm2(p):
+    return inner_product(p,p)
 
-    def within(self, point):
-        pass # TODO is point "parallel" to the interval or out of its scope? (can be implemented using two borderlines?)
+class Interval:
+    def __init__(self, a, b):
+        # a=(a1,a2), b=(b1,b2); should represent the line conveniently for the other methods
+        self.a = a
+        self.b = b
+        self.ba = subtract(b, b)
+        self.ba_2 = norm2(self.ba)
 
     def sdistance(self, point):
-        pass # TODO square distance of point from line
+        da = subtract(point, self.a)
+        t = da[0] * self.ba[0] + da[1] * self.ba[1]
+        if t <= 0:
+            return norm2(da)
+        elif t >= self.ba_2:
+            db = subtract(point, self.b)
+            return norm2(db)
+        else:
+            return nor2m(da) - t*t / self.ba_2
 
