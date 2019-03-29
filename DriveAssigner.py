@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 '''
 --------------- Data assumptions ---------------
@@ -59,21 +60,33 @@ total computations:       ~1e11
 
 '''
 
+def draw():
+    plt.get_current_fig_manager().window.showMaximized()
+    plt.draw()
+    plt.pause(1e-17)
+    plt.tight_layout()
+
 class BusSystem:
     def __init__(self, lines):
         self.lines = lines # BusLines
+        self.drives = {'index':[], 'mse1':[], 'mse2':[], 'mse3':[]}
 
-    def assign_drive(self, drive):
+    def assign_drive(self, drive, index=None):
         '''
         drive: a list of tuples (x,y) representing the observed locations.
         return: line numbers (sorted by probability), corresponding probabilities of bus lines,
                 and plausibility of drive wrt most probable bus line.
         '''
-        return(sorted(self.drive_inconsistencies(drive)))
-        # TODO how do I know if it sorts by probs or by line numbers??
-        probs,err = self.errors_to_probs(self.drive_inconsistencies(drive))
-        line_numbers,probs = (list(l) for l in zip(*sorted(zip(self.line_numbers,probs))))
-        return (line_numbers, probs, err)
+        errs = sorted(self.drive_inconsistencies(drive))
+        self.drives['index'].append(index)
+        self.drives['mse1'].append(errs[0])
+        self.drives['mse2'].append(errs[1])
+        self.drives['mse3'].append(errs[2])
+        return errs
+        #probs,err = self.errors_to_probs(self.drive_inconsistencies(drive))
+        #line_numbers,probs = (list(l) for l in zip(*sorted(zip(self.line_numbers,probs))))
+        # how do I know if it sorts by probs or by line numbers??
+        #return (line_numbers, probs, err)
 
     @staticmethod
     def errors_to_probs(logq):
@@ -86,6 +99,20 @@ class BusSystem:
     def drive_inconsistencies(self, drive):
         return [(bus_line.drive_inconsistency(drive), bus_line.id) for bus_line in self.lines]
 
+    def show_drives_errors(self, n=np.inf):
+        f, axs = plt.subplots(1, 1)
+        ax = axs
+        ax.bar(self.drives['index'][:n], [m[0] for m in self.drives['mse3'][:n]],
+               color='red', label='3rd best')
+        ax.bar(self.drives['index'][:n], [m[0] for m in self.drives['mse2'][:n]],
+               color='yellow', label='2nd best')
+        ax.bar(self.drives['index'][:n], [m[0] for m in self.drives['mse1'][:n]],
+               color='green', label='best fit')
+        ax.set_xlabel('Trip ID')
+        ax.set_ylabel('MSE [m]')
+        ax.legend()
+        draw()
+
 class BusLine:
     def __init__(self, id, nodes):
         self.id = id
@@ -97,6 +124,7 @@ class BusLine:
 
     def drive_inconsistency(self, drive):
         return np.mean([self.sdistance(point) for point in drive])
+        # Note: MSE might not be sensitive enough to outliers
 
     def sdistance(self, point):
         return np.min([line.sdistance(point) for line in self.intervals])
