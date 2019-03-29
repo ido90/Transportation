@@ -3,8 +3,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import Data as D
 from time import time
-from concurrent.futures import ProcessPoolExecutor
 import pickle
+from concurrent.futures import ProcessPoolExecutor
 
 '''
 TODO:
@@ -23,9 +23,8 @@ class BusSystem:
         self.lines = lines # BusLines
         if path:
             h = open(path, "rb")
-            x = pickle.load(h)
+            self.drives = pickle.load(h)
             h.close()
-            self.drives = x.drives
         else:
             self.drives = {}
 
@@ -69,6 +68,16 @@ class BusSystem:
 
     def drive_inconsistencies(self, drive):
         return [(bus_line.drive_inconsistency(drive), bus_line.id) for bus_line in self.lines]
+
+    def print_results(self, only_contradicts=False):
+        print('Trip\tDeclared\tEstimated\tMSE\tCertainty\tContradiction')
+        for k in self.drives:
+            if not only_contradicts or k.split()[1].strip() != self.drives[k]['rid'].strip():
+                print('{0:s}\t{1:s}\t{2:s}\t{3:.0f}\t{4:.2f}\t{5:s}'.format(
+                    k.split()[0], k.split()[1], self.drives[k]['rid'],
+                    self.drives[k]['mse'], self.drives[k]['certainty'],
+                    '' if k.split()[1].strip() == self.drives[k]['rid'].strip()
+                    else 'CONTRADICTION'))
 
     def show_drives_errors(self, n=np.inf, vertical_xlabs=True):
         n = n if n<=len(self.drives) else len(self.drives)
@@ -133,7 +142,7 @@ class Interval:
         # a=(a1,a2), b=(b1,b2); should represent the line conveniently for the other methods
         self.a = a
         self.b = b
-        self.ba = subtract(b, b)
+        self.ba = subtract(b, a)
         self.ba_2 = norm2(self.ba)
 
     def sdistance(self, point):
@@ -167,28 +176,18 @@ if __name__ == '__main__':
     else:
         x = [b.assign_drive(d) for d in dd[:n]]
     b.save_results(x, [d.id for d in dd[:n]])
+    b.save_to_file()
     print('Drives assigned ({0:.0f} [s]).\n'.format(time()-t0))
     # show results
     b.show_drives_errors()
     D.show_lines(ll, dd[2])
     #D.show_lines(ll, dd[2], line_nodes=200, drive_points=7)
     print('Route IDs Reconstruction:')
-    print('Trip\tDeclared\tEstimated\tMSE\tCertainty\tContradiction')
-    for k in b.drives:
-        print('{0:s}\t{1:s}\t{2:s}\t{3:.0f}\t{4:.2f}\t{5:s}'.format(
-            k.split()[0], k.split()[1], b.drives[k]['rid'],
-            b.drives[k]['mse'], b.drives[k]['certainty'],
-            '' if k.split()[1].strip()==b.drives[k]['rid'].strip() else 'CONTRADICTION' ) )
+    b.print_results()
     ids = [k for k in b.drives if k.split()[1].strip()!=b.drives[k]['rid'].strip()]
-    b.save_to_file()
     print('\nContradictions: {0:d}'.format(len(ids)))
+    b.print_results(True)
     b.drives = {k: b.drives[k] for k in ids}
     b.show_drives_errors()
     D.show_lines(ll, dd[0])
-    D.show_lines(ll, dd[1])
-    D.show_lines(ll, dd[-1])
-    for k in b.drives:
-        print('{0:s}\t{1:s}\t{2:s}\t{3:.0f}\t{4:.2f}\t'.format(
-            k.split()[0], k.split()[1], b.drives[k]['rid'],
-            b.drives[k]['mse'], b.drives[k]['certainty'] ) )
     plt.show()
