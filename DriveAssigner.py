@@ -84,10 +84,12 @@ class BusSystem:
                 and plausibility of drive wrt most probable bus line.
         '''
         errs = sorted(self.drive_inconsistencies(drive.points))
+        errs_route_ids = [ id.split(' ')[1] for score,id in errs ]
+        ferrs = [ e for i,(e,id) in enumerate(zip(errs,errs_route_ids)) if id not in set(errs_route_ids[:i]) ]
         self.drives['id'].append(drive.id)
-        self.drives['mse1'].append(errs[0])
-        self.drives['mse2'].append(errs[1])
-        self.drives['mse3'].append(errs[2])
+        self.drives['mse1'].append(ferrs[0])
+        self.drives['mse2'].append(ferrs[1])
+        self.drives['mse3'].append(ferrs[2])
         return errs
         #probs,err = self.errors_to_probs(self.drive_inconsistencies(drive))
         #line_numbers,probs = (list(l) for l in zip(*sorted(zip(self.line_numbers,probs))))
@@ -158,7 +160,7 @@ class Interval:
 
     def sdistance(self, point):
         da = subtract(point, self.a)
-        t = da[0] * self.ba[0] + da[1] * self.ba[1]
+        t = inner_product(da, self.ba)
         if t <= 0:
             return norm2(da)
         elif t >= self.ba_2:

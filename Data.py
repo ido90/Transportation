@@ -74,3 +74,11 @@ if __name__ == '__main__':
     ll = load_lines()
     show_lines(ll)
     plt.show()
+
+# interactively:
+'''
+import DriveAssigner, Data
+system=DriveAssigner.BusSystem(Data.load_lines())
+d=Data.load_drives()
+system.assign_drive(d[0].points)
+'''
