@@ -106,7 +106,7 @@ class BusSystem:
         return [(bus_line.drive_inconsistency(drive), bus_line.id) for bus_line in self.lines]
 
     def show_drives_errors(self, n=np.inf):
-        n = np.min(n,len(self.drives['id']))
+        n = n if n<=len(self.drives['id']) else len(self.drives['id'])
         f, axs = plt.subplots(1, 1)
         ax = axs
         ax.bar(tuple(range(n)), [m[0] for m in self.drives['mse3'][:n]],
