@@ -1,8 +1,14 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import Data as D
 
 '''
+TODO:
+1. understand the definition of the problem & give full end-to-end solution
+2. time optimization
+3. improve algo to include directions
+
 --------------- Data assumptions ---------------
 
 1. Bus-lines are available as a list of line-numbers along with the corresponding paths.
@@ -47,7 +53,7 @@ and possibly remove more as the process goes on (eg improve resolution of points
 instead of going over points sequentially).
 
 
---------------- Time complexity ---------------
+--------------- Time complexity estimation ---------------
 
 total computations:       ~1e11
   computations per drive:   ~4e5
@@ -69,16 +75,16 @@ def draw():
 class BusSystem:
     def __init__(self, lines):
         self.lines = lines # BusLines
-        self.drives = {'index':[], 'mse1':[], 'mse2':[], 'mse3':[]}
+        self.drives = {'id':[], 'mse1':[], 'mse2':[], 'mse3':[]}
 
-    def assign_drive(self, drive, index=None):
+    def assign_drive(self, drive):
         '''
         drive: a list of tuples (x,y) representing the observed locations.
         return: line numbers (sorted by probability), corresponding probabilities of bus lines,
                 and plausibility of drive wrt most probable bus line.
         '''
-        errs = sorted(self.drive_inconsistencies(drive))
-        self.drives['index'].append(index)
+        errs = sorted(self.drive_inconsistencies(drive.points))
+        self.drives['id'].append(drive.id)
         self.drives['mse1'].append(errs[0])
         self.drives['mse2'].append(errs[1])
         self.drives['mse3'].append(errs[2])
@@ -100,16 +106,21 @@ class BusSystem:
         return [(bus_line.drive_inconsistency(drive), bus_line.id) for bus_line in self.lines]
 
     def show_drives_errors(self, n=np.inf):
+        n = np.min(n,len(self.drives['id']))
         f, axs = plt.subplots(1, 1)
         ax = axs
-        ax.bar(self.drives['index'][:n], [m[0] for m in self.drives['mse3'][:n]],
+        ax.bar(tuple(range(n)), [m[0] for m in self.drives['mse3'][:n]],
                color='red', label='3rd best')
-        ax.bar(self.drives['index'][:n], [m[0] for m in self.drives['mse2'][:n]],
+        ax.bar(tuple(range(n)), [m[0] for m in self.drives['mse2'][:n]],
                color='yellow', label='2nd best')
-        ax.bar(self.drives['index'][:n], [m[0] for m in self.drives['mse1'][:n]],
+        ax.bar(tuple(range(n)), [m[0] for m in self.drives['mse1'][:n]],
                color='green', label='best fit')
         ax.set_xlabel('Trip ID')
         ax.set_ylabel('MSE [m]')
+        ax.set_xticks(tuple(range(n)))
+        ax.set_xticklabels(self.drives['id'], fontsize=10)
+        for tick in ax.get_xticklabels():
+            tick.set_rotation(90)
         ax.legend()
         draw()
 
@@ -123,7 +134,7 @@ class BusLine:
         return [Interval(x,y) for x,y in zip(self.nodes[:-1],self.nodes[1:])]
 
     def drive_inconsistency(self, drive):
-        return np.mean([self.sdistance(point) for point in drive])
+        return np.sqrt(np.mean([self.sdistance(point) for point in drive]))
         # Note: MSE might not be sensitive enough to outliers
 
     def sdistance(self, point):
@@ -155,3 +166,12 @@ class Interval:
         else:
             return norm2(da) - t*t / self.ba_2
 
+if __name__ == '__main__':
+    ll = D.load_lines()
+    dd = D.load_drives()
+    b = BusSystem(ll)
+    x = [b.assign_drive(d) for d in dd[:5]]
+    b.show_drives_errors()
+    D.show_lines(ll, dd[2], verbose=2)
+    D.show_lines(ll, dd[2], line_nodes=100, drive_points=7)
+    plt.show()
