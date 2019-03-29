@@ -17,13 +17,17 @@ def to_meters(lat,lon):
     return ((lat - 32) / 180 * np.pi * 6400000,
             (lon - 34) / 180 * np.pi * 6400000 * 0.84)
 
-def load_drives(path=r'data/train.csv'):
+def load_drives(path=r'data/train.csv', required_points=20):
     if not path.endswith('.csv'): path += '.csv'
     drives = pd.read_csv(path)
+    if 'route_id' not in drives.columns:
+        drives['route_id'] = 0
 
     data = zip(drives.trip_index, drives.route_id, drives.lat, drives.lon)
     all_drives = [ Drive(k, [ to_meters(lat,lon) for id1,id2,lat,lon in giter ])
                    for k,giter in itertools.groupby(data, key=lambda x:"{} {}".format(x[0],x[1])) ]
+    if required_points > 0:
+        all_drives = [d for d in all_drives if len(d.points) >= required_points]
 
     return all_drives
 
