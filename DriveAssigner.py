@@ -116,7 +116,7 @@ class BusSystem:
 
     def summarize_results(self):
         f, axs = plt.subplots(1, 2)
-        x = 100 * np.array(list(range(len(self.drives)))) / len(self.drives)
+        x = 100 * np.array(list(range(len(self.drives)))) / (len(self.drives)-1)
         axs[0].plot(x, sorted([self.drives[k]['mse']
                                for k in self.drives]))
         axs[0].set_title('RMSE Distribution Summary', fontsize=14)
@@ -129,6 +129,7 @@ class BusSystem:
         axs[1].set_xlabel('Drive Percentile [%]', fontsize=12)
         axs[1].set_ylabel('Certainty: 1 - RMSE1 / RMSE2', fontsize=12)
         axs[1].set_xlim([0,100])
+        axs[1].set_ylim([0,1])
         draw()
 
     def summarize_inconsistencies(self, drives):

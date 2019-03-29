@@ -41,7 +41,7 @@ def plot_drives(all_drives, required_points):
     if required_points:
         plt.plot([0, 100], [required_points, required_points],
                  'r-', label='threshold')
-    x = 100 * np.array(list(range(len(all_drives)))) / len(all_drives)
+    x = 100 * np.array(list(range(len(all_drives)))) / (len(all_drives)-1)
     axs.plot(x, sorted([len(d.points) for d in all_drives]), 'k-')
     axs.set_xlim([0, 100])
     axs.set_xlabel('Drive Percentile [%]', fontsize=12)
@@ -117,10 +117,6 @@ def show_lines(lines, drive=None, verbose=0, dynamic=False, grid=True,
     draw()
 
 if __name__ == '__main__':
-    system=DriveAssigner.BusSystem(load_lines())
-    d=load_drives()
-    for e in system.assign_drive(d[0]):
-        print(e)
     ll = load_lines()
     show_lines(ll)
     dd = load_drives()
