@@ -114,6 +114,16 @@ class BusSystem:
         ax.legend()
         draw()
 
+    def summarize_results(self):
+        f, axs = plt.subplots(1, 2)
+        axs[0].plot(sorted([self.drives[k]['mse'] for k in self.drives]))
+        axs[0].set_xlabel('Drive')
+        axs[0].set_ylabel('MSE')
+        axs[1].plot(sorted([self.drives[k]['certainty'] for k in self.drives]))
+        axs[1].set_xlabel('Drive')
+        axs[1].set_ylabel('Certainty')
+        draw()
+
 class BusLine:
     def __init__(self, id, nodes):
         self.id = id
@@ -166,7 +176,7 @@ if __name__ == '__main__':
     print('Data loaded ({0:.0f} [s]).\n'.format(time()-t0))
     # assign drives
     distributed = True
-    n = 200
+    n = 3000
     print('Drives to assign: {0:d}.'.format(n))
     b = BusSystem(ll)
     if distributed:
@@ -179,15 +189,18 @@ if __name__ == '__main__':
     b.save_to_file()
     print('Drives assigned ({0:.0f} [s]).\n'.format(time()-t0))
     # show results
-    b.show_drives_errors()
+    b.show_drives_errors(80)
     D.show_lines(ll, dd[2])
     #D.show_lines(ll, dd[2], line_nodes=200, drive_points=7)
+    b.summarize_results()
     print('Route IDs Reconstruction:')
     b.print_results()
     ids = [k for k in b.drives if k.split()[1].strip()!=b.drives[k]['rid'].strip()]
     print('\nContradictions: {0:d}'.format(len(ids)))
-    b.print_results(True)
-    b.drives = {k: b.drives[k] for k in ids}
-    b.show_drives_errors()
-    D.show_lines(ll, next(d for d in dd if d.id in ids))
+    if ids:
+        b.print_results(True)
+        b.drives = {k: b.drives[k] for k in ids}
+        b.show_drives_errors()
+        D.show_lines(ll, next(d for d in dd if d.id in ids))
+        # TODO for contradictions - print distribution of lengths, and relative MSEs
     plt.show()
