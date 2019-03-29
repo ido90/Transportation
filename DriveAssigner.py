@@ -189,5 +189,5 @@ if __name__ == '__main__':
     b.print_results(True)
     b.drives = {k: b.drives[k] for k in ids}
     b.show_drives_errors()
-    D.show_lines(ll, dd[0])
+    D.show_lines(ll, next(d for d in dd if d.id in ids))
     plt.show()
