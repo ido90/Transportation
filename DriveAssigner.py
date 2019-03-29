@@ -105,7 +105,7 @@ class BusSystem:
     def drive_inconsistencies(self, drive):
         return [(bus_line.drive_inconsistency(drive), bus_line.id) for bus_line in self.lines]
 
-    def show_drives_errors(self, n=np.inf):
+    def show_drives_errors(self, n=np.inf, vertical_xlabs=True):
         n = n if n<=len(self.drives['id']) else len(self.drives['id'])
         f, axs = plt.subplots(1, 1)
         ax = axs
@@ -119,8 +119,9 @@ class BusSystem:
         ax.set_ylabel('MSE [m]')
         ax.set_xticks(tuple(range(n)))
         ax.set_xticklabels(self.drives['id'], fontsize=10)
-        for tick in ax.get_xticklabels():
-            tick.set_rotation(90)
+        if vertical_xlabs:
+            for tick in ax.get_xticklabels():
+                tick.set_rotation(90)
         ax.legend()
         draw()
 
