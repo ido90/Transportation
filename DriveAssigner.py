@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 '''
 --------------- Data assumptions ---------------
@@ -12,7 +13,7 @@ each containing a list of 2D locations along with the corresponding times.
 
 --------------- Model assumptions ---------------
 
-1. The probability of observation of a bus in distance d from the line goes like exp(-d),
+1. The probability of observation of a bus in distance d from the line goes like exp(-d^2),
 expressing GPS errors, map inaccuracies, and actual deviations from the planned road.
 
 Note: that's a quite arbitrary-scale assumption, since the basis of the exponent e,
