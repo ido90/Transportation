@@ -13,9 +13,9 @@ class Drive:
 def to_meters(lat,lon):
     # Approximations:
     # earth radius ~ 6400km
-    # cos(34 degrees) ~ 0.83
+    # cos(32 degrees) ~ 0.84
     return ((lat - 32) / 180 * np.pi * 6400000,
-            (lon - 34) / 180 * np.pi * 6400000 * 0.83)
+            (lon - 34) / 180 * np.pi * 6400000 * 0.84)
 
 def load_drives(path=r'data/train.csv'):
     if not path.endswith('.csv'): path += '.csv'

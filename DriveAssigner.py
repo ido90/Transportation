@@ -19,9 +19,15 @@ def draw():
     plt.tight_layout()
 
 class BusSystem:
-    def __init__(self, lines):
+    def __init__(self, lines, path=None):
         self.lines = lines # BusLines
-        self.drives = {}
+        if path:
+            h = open(path, "rb")
+            x = pickle.load(h)
+            h.close()
+            self.drives = x.drives
+        else:
+            self.drives = {}
 
     def assign_drive(self, drive, save_res=False):
         '''
@@ -31,7 +37,7 @@ class BusSystem:
         '''
         errs = sorted(self.drive_inconsistencies(drive.points))
         if save_res:
-            self.save_results([errs])
+            self.save_results([errs], [drive.id])
         return errs
         #probs,err = self.errors_to_probs(self.drive_inconsistencies(drive))
         #line_numbers,probs = (list(l) for l in zip(*sorted(zip(self.line_numbers,probs))))
@@ -49,15 +55,8 @@ class BusSystem:
 
     def save_to_file(self, path=r'data/res.pkl'):
         h = open(path, "wb")
-        pickle.dump(self, h)
+        pickle.dump(self.drives, h)
         h.close()
-
-    @staticmethod
-    def read_from_file(path=r'data/res.pkl'):
-        h = open(path, "rb")
-        x = pickle.load(h)
-        h.close()
-        return x
 
     @staticmethod
     def errors_to_probs(logq):
@@ -186,9 +185,10 @@ if __name__ == '__main__':
     b.drives = {k: b.drives[k] for k in ids}
     b.show_drives_errors()
     D.show_lines(ll, dd[0])
+    D.show_lines(ll, dd[1])
+    D.show_lines(ll, dd[-1])
     for k in b.drives:
         print('{0:s}\t{1:s}\t{2:s}\t{3:.0f}\t{4:.2f}\t'.format(
             k.split()[0], k.split()[1], b.drives[k]['rid'],
-            b.drives[k]['mse'], b.drives[k]['certainty'],
-            '' if k.split()[1].strip()==b.drives[k]['rid'].strip() else 'CONTRADICTION' ) )
+            b.drives[k]['mse'], b.drives[k]['certainty'] ) )
     plt.show()
