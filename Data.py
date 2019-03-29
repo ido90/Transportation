@@ -13,6 +13,7 @@ class Drive:
 def to_meters(lat,lon):
     # Approximations:
     # earth radius ~ 6400km
+    # israel lat ~ 32 degrees
     # cos(32 degrees) ~ 0.84
     return ((lat - 32) / 180 * np.pi * 6400000,
             (lon - 34) / 180 * np.pi * 6400000 * 0.84)
@@ -81,6 +82,10 @@ def show_lines(lines, drive=None, verbose=0, dynamic=False, grid=True,
     draw()
 
 if __name__ == '__main__':
+    system=DriveAssigner.BusSystem(load_lines())
+    d=load_drives()
+    for e in system.assign_drive(d[0]):
+        print(e)
     ll = load_lines()
     show_lines(ll)
     plt.show()
@@ -90,5 +95,5 @@ if __name__ == '__main__':
 import DriveAssigner, Data
 system=DriveAssigner.BusSystem(Data.load_lines())
 d=Data.load_drives()
-system.assign_drive(d[0].points)
+system.assign_drive(d[0])
 '''
