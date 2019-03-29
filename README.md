@@ -23,7 +23,7 @@ each containing a list of 2D locations along with the corresponding times.
 ### Running time
 The whole analysis took around 15-20 minutes per each dataset (train & test) in a personal laptop (i7 quadcore).
 
-### Results
+### Findings
 
 ### Conclusions
 
