@@ -4,68 +4,12 @@ import matplotlib.pyplot as plt
 import Data as D
 from time import time
 from concurrent.futures import ProcessPoolExecutor
+import pickle
 
 '''
 TODO:
-1. understand the definition of the problem & give full end-to-end solution
-2. time optimization
-3. improve algo to include directions
-
---------------- Data assumptions ---------------
-
-1. Bus-lines are available as a list of line-numbers along with the corresponding paths.
-Each path is available as a list of 2D points (representing the locations of the stations).
-
-2. Drives observations are available as a list of separated drives,
-each containing a list of 2D locations along with the corresponding times.
-
-
---------------- Model assumptions ---------------
-
-1. The probability of observation of a bus in distance d from the line goes like exp(-d^2),
-expressing GPS errors, map inaccuracies, and actual deviations from the planned road.
-
-Note: that's a quite arbitrary-scale assumption, since the basis of the exponent e,
-determines the ratio between probabilities. This will be a problem when estimating the
-gap between the probabilities. However, it does not affect the identity of the ML line.
-
-Note: the ML line is actually the one that minimizes the MSE.
-
-2. The prior probability for all the lines is identical. Alternatively,
-we look for ML line given the observation, rather than max-probability line.
-
-3. The roads between the stations can be approximated as straight lines:
-the distance between the actual road and the straight line,
-is negligible compared to the distance between roads of two different buses.
-
-
---------------- Possible improvements ---------------
-
-1. Temporal direction of the bus line is currently not exploited, and really should be.
-
-Simple exploitation: at each point, note which interval is the closest, and if the intervals
-are not monotonous, then reduce probability. Drawback: closest interval may be just a close interval,
-where the actual interval of the drive is adjacent. So assigning the other,
-slightly more distant interval could be better, hence we don't really maximize the likelihood.
- 
-Advanced exploitation: choose best assignment of intervals under constraint of monotony, eg using DP. 
-
-2. Running time optimization: remove most of the lines at early stage (eg using beginning and end),
-and possibly remove more as the process goes on (eg improve resolution of points
-instead of going over points sequentially).
-
-
---------------- Time complexity estimation ---------------
-
-total computations:       ~1e11
-  computations per drive:   ~4e5
-    bus lines:                ~100
-    intervals per line:       ~40
-    points per drive:         ~100
-  total drives:             ~3e5
-    drives per day:           ~3e3
-    total days:               ~90
-
+1. time optimization
+2. improve algo to include directions
 '''
 
 def draw():
@@ -79,28 +23,46 @@ class BusSystem:
         self.lines = lines # BusLines
         self.drives = {}
 
-    def assign_drive(self, drive, save_full_res=True):
+    def assign_drive(self, drive, save_res=False):
         '''
         drive: a list of tuples (x,y) representing the observed locations.
         return: line numbers (sorted by probability), corresponding probabilities of bus lines,
                 and plausibility of drive wrt most probable bus line.
         '''
         errs = sorted(self.drive_inconsistencies(drive.points))
-        errs_route_ids = [ id.split(' ')[1] for score,id in errs ]
-        ferrs = [ e for i,(e,id) in enumerate(zip(errs,errs_route_ids)) if id not in set(errs_route_ids[:i]) ]
-        # save results
-        self.drives[drive.id] = {'sid': ferrs[0][1].split()[0], 'rid': ferrs[0][1].split()[1],
-                                 'mse': ferrs[0][0], 'certainty': 1-ferrs[0][0]/ferrs[1][0],
-                                 'res': (errs,ferrs) if save_full_res else None}
+        if save_res:
+            self.save_results([errs])
         return errs
         #probs,err = self.errors_to_probs(self.drive_inconsistencies(drive))
         #line_numbers,probs = (list(l) for l in zip(*sorted(zip(self.line_numbers,probs))))
         # how do I know if it sorts by probs or by line numbers??
         #return (line_numbers, probs, err)
 
+    def save_results(self, errs, ids, save_full_res=True):
+        for id,err in zip(ids, errs):
+            errs_route_ids = [ id.split(' ')[1] for score,id in err]
+            ferrs = [e for i,(e,id) in enumerate(zip(err,errs_route_ids))
+                     if id not in set(errs_route_ids[:i]) ]
+            self.drives[id] = {'sid': ferrs[0][1].split()[0], 'rid': ferrs[0][1].split()[1],
+                                     'mse': ferrs[0][0], 'certainty': 1-ferrs[0][0]/ferrs[1][0],
+                                     'res': (err,ferrs) if save_full_res else None}
+
+    def save_to_file(self, path=r'data/res.pkl'):
+        h = open(path, "wb")
+        pickle.dump(self, h)
+        h.close()
+
+    @staticmethod
+    def read_from_file(path=r'data/res.pkl'):
+        h = open(path, "rb")
+        x = pickle.load(h)
+        h.close()
+        return x
+
     @staticmethod
     def errors_to_probs(logq):
-        smallest_inconsistency = np.min(logq) # actually it's the MSE of the drive wrt closest bus line
+        smallest_inconsistency = np.min(logq)
+        # actually above it's the MSE of the drive wrt closest bus line
         logq -= np.min(logq)
         q = np.array([np.exp(lq) if lq>1e-2 else 0 for lq in logq])
         p = q / np.sum(q)
@@ -109,17 +71,30 @@ class BusSystem:
     def drive_inconsistencies(self, drive):
         return [(bus_line.drive_inconsistency(drive), bus_line.id) for bus_line in self.lines]
 
-    def show_drives_errors(self, n=np.inf, n_fits=3, vertical_xlabs=True):
+    def show_drives_errors(self, n=np.inf, vertical_xlabs=True):
         n = n if n<=len(self.drives) else len(self.drives)
-        f, axs = plt.subplots(1, 1)
-        ax = axs
-        if n_fits>=3:
-            ax.bar(tuple(range(n)), [self.drives[k]['res'][1][2][0] for k in list(self.drives.keys())[:n]],
-                   color='red', label='3rd best')
-        if n_fits>=2:
-            ax.bar(tuple(range(n)), [self.drives[k]['res'][1][1][0] for k in list(self.drives.keys())[:n]],
-                   color='yellow', label='2nd best')
-        ax.bar(tuple(range(n)), [self.drives[k]['res'][1][0][0] for k in list(self.drives.keys())[:n]],
+        f, axs = plt.subplots(2, 1)
+        ax = axs[1]
+        ax.bar(tuple(range(n)), [self.drives[k]['res'][1][2][0]
+                                 for k in list(self.drives.keys())[:n]],
+               color='red', label='3rd best')
+        ax.bar(tuple(range(n)), [self.drives[k]['res'][1][1][0]
+                                 for k in list(self.drives.keys())[:n]],
+               color='yellow', label='2nd best')
+        ax.bar(tuple(range(n)), [self.drives[k]['res'][1][0][0]
+                                 for k in list(self.drives.keys())[:n]],
+               color='green', label='best fit')
+        ax.set_xlabel('Trip ID')
+        ax.set_ylabel('MSE [m]')
+        ax.set_xticks(tuple(range(n)))
+        ax.set_xticklabels(self.drives.keys(), fontsize=14)
+        if vertical_xlabs:
+            for tick in ax.get_xticklabels():
+                tick.set_rotation(90)
+        ax.legend()
+        ax = axs[0]
+        ax.bar(tuple(range(n)), [self.drives[k]['res'][1][0][0]
+                                 for k in list(self.drives.keys())[:n]],
                color='green', label='best fit')
         ax.set_xlabel('Trip ID')
         ax.set_ylabel('MSE [m]')
@@ -175,24 +150,45 @@ class Interval:
 
 if __name__ == '__main__':
     t0 = time()
+    # load data
     ll = D.load_lines()
     print('Number of lines: {0:d}.'.format(len(ll)))
     dd = D.load_drives()
     print('Number of drive: {0:d}'.format(len(dd)))
-    print('Data loaded ({0:.0f} [s]).'.format(time()-t0))
-    n = 2
+    print('Data loaded ({0:.0f} [s]).\n'.format(time()-t0))
+    # assign drives
+    distributed = True
+    n = 200
     print('Drives to assign: {0:d}.'.format(n))
     b = BusSystem(ll)
-
-    tpool = ProcessPoolExecutor(max_workers=3)
-    ret = tpool.map(b.assign_drive, dd[:n])
-    x = list(ret)
-    #x = [b.assign_drive(d) for d in dd[:n]]
-
-    print('Drives assigned ({0:.0f} [s]).'.format(time()-t0))
+    if distributed:
+        tpool = ProcessPoolExecutor(max_workers=5)
+        ret = tpool.map(b.assign_drive, dd[:n])
+        x = list(ret)
+    else:
+        x = [b.assign_drive(d) for d in dd[:n]]
+    b.save_results(x, [d.id for d in dd[:n]])
+    print('Drives assigned ({0:.0f} [s]).\n'.format(time()-t0))
+    # show results
     b.show_drives_errors()
-    b.show_drives_errors(n_fits=2)
-    b.show_drives_errors(n_fits=1)
     D.show_lines(ll, dd[2])
-    D.show_lines(ll, dd[2], line_nodes=100, drive_points=7)
+    #D.show_lines(ll, dd[2], line_nodes=200, drive_points=7)
+    print('Route IDs Reconstruction:')
+    print('Trip\tDeclared\tEstimated\tMSE\tCertainty\tContradiction')
+    for k in b.drives:
+        print('{0:s}\t{1:s}\t{2:s}\t{3:.0f}\t{4:.2f}\t{5:s}'.format(
+            k.split()[0], k.split()[1], b.drives[k]['rid'],
+            b.drives[k]['mse'], b.drives[k]['certainty'],
+            '' if k.split()[1].strip()==b.drives[k]['rid'].strip() else 'CONTRADICTION' ) )
+    ids = [k for k in b.drives if k.split()[1].strip()!=b.drives[k]['rid'].strip()]
+    b.save_to_file()
+    print('\nContradictions: {0:d}'.format(len(ids)))
+    b.drives = {k: b.drives[k] for k in ids}
+    b.show_drives_errors()
+    D.show_lines(ll, dd[0])
+    for k in b.drives:
+        print('{0:s}\t{1:s}\t{2:s}\t{3:.0f}\t{4:.2f}\t'.format(
+            k.split()[0], k.split()[1], b.drives[k]['rid'],
+            b.drives[k]['mse'], b.drives[k]['certainty'],
+            '' if k.split()[1].strip()==b.drives[k]['rid'].strip() else 'CONTRADICTION' ) )
     plt.show()
