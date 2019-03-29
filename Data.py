@@ -9,12 +9,18 @@ class Drive:
         self.id = id
         self.points = points
 
+def to_meters(lat,lon):
+    # aprox
+    # earth radius = 6400km
+    # cos(34 degrees) = 0.83
+    return ((lat - 32) / 180 * 3.1415 * 6400000, (lon - 34) / 180 * 3.1415 * 6400000 * 0.83)
+
 def load_drives(path=r'data/train.csv'):
     if not path.endswith('.csv'): path += '.csv'
     drives = pd.read_csv(path)
 
     data = zip(drives.trip_index, drives.route_id, drives.lat, drives.lon)
-    all_drives = [ Drive(k, [ (lat,lon) for id1,id2,lat,lon in giter ])
+    all_drives = [ Drive(k, [ to_meters(lat,lon) for id1,id2,lat,lon in giter ])
                    for k,giter in itertools.groupby(data, key=lambda x:"{} {}".format(x[0],x[1])) ]
 
     return all_drives
@@ -24,7 +30,7 @@ def load_lines(path=r'data/shapes.csv'):
     lines = pd.read_csv(path)
 
     data = zip(lines.shape_id, lines.route_id, lines.shape_pt_lat, lines.shape_pt_lon)
-    all_lines = [ DriveAssigner.BusLine(k, [ (lat,lon) for id1,id2,lat,lon in giter ])
+    all_lines = [ DriveAssigner.BusLine(k, [ to_meters(lat,lon) for id1,id2,lat,lon in giter ])
                   for k,giter in itertools.groupby(data, key=lambda x:"{} {}".format(x[0],x[1])) ]
 
     return all_lines
@@ -49,3 +55,11 @@ if __name__ == '__main__':
     ll = load_lines()
     show_lines(ll, verbose=2)
     plt.show()
+
+# interactively:
+'''
+import DriveAssigner, Data
+system=DriveAssigner.BusSystem(Data.load_lines())
+d=Data.load_drives()
+system.assign_drive(d[0].points)
+'''
