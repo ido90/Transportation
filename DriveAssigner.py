@@ -87,7 +87,8 @@ class BusSystem:
         return [bus_line.drive_inconsistency(drive) for bus_line in self.lines]
 
 class BusLine:
-    def __init__(self, nodes):
+    def __init__(self, id, nodes):
+        self.id = id
         self.nodes = nodes # list of tuples (x,y)
         self.intervals = self.initialize_intervals()
 
@@ -98,8 +99,7 @@ class BusLine:
         return np.mean([self.sdistance(point) for point in drive])
 
     def sdistance(self, point):
-        return np.min([line.sdistance(point) for line in self.intervals if line.within(point)] +
-                      [(point[0]-node[0])**2+(point[1]-node[1])**2 for node in self.nodes])
+        return np.min([line.sdistance(point) for line in self.intervals])
 
 def subtract(p1, p2):
     return (p1[0] - p2[0], p1[1] - p2[1])
@@ -125,5 +125,5 @@ class Interval:
             db = subtract(point, self.b)
             return norm2(db)
         else:
-            return nor2m(da) - t*t / self.ba_2
+            return norm2(da) - t*t / self.ba_2
 
