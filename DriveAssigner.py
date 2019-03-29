@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import Data as D
 from time import time
+from concurrent.futures import ProcessPoolExecutor
 
 '''
 TODO:
@@ -182,7 +183,12 @@ if __name__ == '__main__':
     n = 2
     print('Drives to assign: {0:d}.'.format(n))
     b = BusSystem(ll)
-    x = [b.assign_drive(d) for d in dd[:n]]
+
+    tpool = ProcessPoolExecutor(max_workers=3)
+    ret = tpool.map(b.assign_drive, dd[:n])
+    x = list(ret)
+    #x = [b.assign_drive(d) for d in dd[:n]]
+
     print('Drives assigned ({0:.0f} [s]).'.format(time()-t0))
     b.show_drives_errors()
     b.show_drives_errors(n_fits=2)
