@@ -12,6 +12,7 @@ It also provides general tools for detection of uncertainly-classified trips (wi
 The match of a trip to a planned route is essentially calculated through the distances of the observed trip locations from the route.
 
 The complete results and a sample of figures are available in the output/ directory.
+The data provided for the hackathon are available in the Data link below.
 
 ## Challenge Definition
 
@@ -93,18 +94,21 @@ Several possible extensions to the project may be beneficial, in particular for 
 While this may seem more elegant and allow corresponding decision-making, the probabilities - even if can be approximated by such a model - may be too sensitive to the scale of the model (represented by alpha).
 
 ## Relevant Links
+### This project
+
 Project presentation:
 https://docs.google.com/presentation/d/1Bj7gmMqxZy01rXaEYRNMPV5WiuhOmw9ZtTcVtFbSWaQ/edit?usp=sharing
+
+Data:
+https://drive.google.com/drive/folders/1uGbutPLIm1cnLUy3-q8QJEaDyoQ4tCHK
+
+### The hackathon
 
 Hackathon homepage:
 https://civichack2019.hasadna.org.il/hackathon
 
 Schedule:
 https://civichack2019.hasadna.org.il/schedule
-
-Updates:
-https://forum.hasadna.org.il/t/topic/2255
-
 
 Challenges:
 https://hackdash.org/dashboards/civichack
@@ -118,6 +122,3 @@ https://hackdash.org/projects/5c86bc72256b2a1313910628
 
 Github:
 https://github.com/hasadna/open-bus/issues/156
-
-Data:
-https://drive.google.com/drive/folders/1uGbutPLIm1cnLUy3-q8QJEaDyoQ4tCHK
