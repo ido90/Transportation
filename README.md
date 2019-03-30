@@ -6,12 +6,12 @@ Written by Ido Greenberg and Oded Shimon in 2019, as part of a Civil Hackathon o
 Both data sets of planned bus routes and of actual bus trips are publicly available in Israel, allowing diagnosis of trips and comparison of their timings and routes to the plans.
 However, it is suspected that the reported matching between the planned routes and the actual trips is inaccurate, making any diagnosis ineffective.
 
-This project shows that within limited subsets of the data, practically all the observed trips correctly correspond to their reported route.
-It also provides general tools for detection of uncertainly-classified trips (with more than one plausible planned route) and of anomalous trips (with no plausible planned route).
+This project shows that within limited subsets of the data (that were provided in the hackathon), practically all the observed trips correctly correspond to their reported route.
+It also provides general tools for detection of uncertainly-classified trips (with more than one plausible planned route) and of anomalous trips (with no plausible planned route), and convenient visualization of these anomalous trips.
 
 The match of a trip to a planned route is essentially calculated through the distances of the observed trip locations from the route.
 
-TODO
+The complete results and a sample of figures are available in the output/ directory.
 
 ## Challenge Definition
 
@@ -56,7 +56,7 @@ The idea is that if the location should be on the interval, the distance should 
 ### Analysis
 The algorithm described above allows computation of several useful results and metrics:
 
-- Best-fit route - as described above.
+- **Best-fit route** - as described above.
 
 - **Plausibility** of the best-fit route: simply provided by the RMSE corresponding to this route (in units of meters). Exceptionally large error indicates that the trip does not well-correspond to any of the routes in the data.
 
@@ -70,7 +70,7 @@ In the partially-supported C++ implementation, it took ~15 seconds.
 ### Findings
 The following findings are demonstrated in the figures available in the output/ directory:
 
-1. In the data that was used in the hackathon, all the reportd route IDs of the trips seem to be correct.
+1. In the data that was used in the hackathon, **all the reportd route IDs of the trips seem to be correct**.
 
 2. The current project **reconstructs the route IDs independently and successfully, most of the time with high plausibility and certainty**. In particular, there was **exactly 1 inconsistency** between the reconstructed and the reported route ID (out of more than 2K labeled trips).
 
