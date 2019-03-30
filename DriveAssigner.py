@@ -172,6 +172,18 @@ class BusSystem:
             self.drives = drives_orig
             draw()
 
+    def show_lines(self, trips_to_plot, drives, n_lines=2, best=True):
+        for k in trips_to_plot:
+            l_ids = self.drives[k]['res'][1]
+            l_ids = l_ids[:n_lines] if best else l_ids[-n_lines:]
+            ll = [l for l in self.lines
+                  if l.id in [l[1] for l in l_ids]]
+            d = [d for d in drives if d.id.split()[1]==k.split()[1]]
+            assert(len(d)==1, d)
+            d = d[0]
+            print(ll)
+            print(d)
+            D.show_lines(ll, d, grid=False)
 
 class BusLine:
     def __init__(self, id, nodes):
@@ -256,3 +268,23 @@ if __name__ == '__main__':
     main(test=False, fetch_only=True, n=3000)
     main(test=True, fetch_only=True, n=3000, res_path='output/test.res.pkl')
     plt.show()
+
+
+# Interactively:
+'''
+import Data as D
+import DriveAssigner as a
+
+ll = D.load_lines()
+dd = D.load_drives()
+b = a.BusSystem(ll, 'output/res.pkl')
+
+bad_inconsistent = [k for k in b.drives if k.split()[1].strip() != b.drives[k]['rid'].strip()]
+bad_cert = {k: b.drives[k] for k in b.drives if b.drives[k]['certainty']<0.01}
+bad_mse = {k: b.drives[k] for k in b.drives if b.drives[k]['mse']>100}
+bad_short = [d.id for d in dd if len(d.points)<30]
+good_cert = {k: b.drives[k] for k in b.drives if b.drives[k]['certainty']>0.9975}
+good_mse = {k: b.drives[k] for k in b.drives if b.drives[k]['mse']<3}
+
+#b.show_lines(..., dd)
+'''

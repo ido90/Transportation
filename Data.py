@@ -122,7 +122,8 @@ if __name__ == '__main__':
     dd = load_drives()
     plt.show()
 
-# interactively:
+
+# Interactively:
 '''
 import DriveAssigner, Data
 system=DriveAssigner.BusSystem(Data.load_lines())
