@@ -1,8 +1,16 @@
-# Public Transportation Data Challenge
+# Matching of Recorded Bus Trips to Planned Routes
 
 Written by Ido Greenberg and Oded Shimon in 2019, as part of a Civil Hackathon of the Israeli Workshop of Public Knowledge.
 
 ## Abstract
+Both data sets of planned bus routes and of actual bus trips are publicly available in Israel, allowing diagnosis of trips and comparison of their timings and routes to the plans.
+However, it is suspected that the reported matching between the planned routes and the actual trips is inaccurate, making any diagnosis ineffective.
+
+This project shows that within limited subsets of the data, practically all the observed trips correctly correspond to their reported route.
+It also provides general tools for detection of uncertainly-classified trips (with more than one plausible planned route) and of anomalous trips (with no plausible planned route).
+
+The match of a trip to a planned route is essentially calculated through the distances of the observed trip locations from the route.
+
 TODO
 
 ## Challenge Definition
