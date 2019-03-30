@@ -64,14 +64,19 @@ The algorithm described above allows computation of several useful results and m
 
 ## Results
 ### Running time
-The whole analysis took around 15-20 minutes per each dataset (train & test) in a personal laptop (i7 quadcore).
-In the partially-supported C++ implementation, it took a few seconds.
+The whole analysis took 15-20 minutes per each dataset (train & test) in a personal laptop (i7 quadcore).
+In the partially-supported C++ implementation, it took ~15 seconds.
 
 ### Findings
-TODO
+The following findings are demonstrated in the figures available in the output/ directory:
 
-### Conclusions
-TODO
+1. In the data that was used in the hackathon, all the reportd route IDs of the trips seem to be correct.
+
+2. The current project **reconstructs the route IDs independently and successfully, most of the time with high plausibility and certainty**. In particular, there was **exactly 1 inconsistency** between the reconstructed and the reported route ID (out of more than 2K labeled trips).
+
+3. **Low plausibility** typically corresponds to trips with **radical outlier observations**, which probably express errors in the GPS or in the stored data. Interestingly, **the algorithm seems insensitive to these outliers**, and picks the right route ID nonetheless.
+
+4. **Low certainty** typically corresponds to **very similar routes**, in particular in trips where no observations are available in the areas that distinct between the similar routes.
 
 ## Possible Scale-up Extensions
 Several possible extensions to the project may be beneficial, in particular for larger scale of data:
@@ -82,10 +87,14 @@ Several possible extensions to the project may be beneficial, in particular for 
 
 3. Exploiting times of trip observations, e.g. by forcing the order of the observed trip points to match the order of their corresponding intervals in the route. This would complicate the calculation of the distance between a trip and a route, but should probably be solvable by Dynamic Programming.
 
-4. Probabilistic modeling: the RMSEs of the trips wrt rodfutes may be replaced by probabilistic terms, e.g. by assuming the observation error to follow the distribution P(e)~exp(-alpha\*e^2) (making the SSE equal the log-likelihood).
+4. Distinguishing between routes which are subsets of each other, e.g. by measuring the cover of each route by the observed trip (i.e. if one route is similar to another with an additional interval, and there are no observed points in the additional interval, then the shorter route is better covered by the trip, hence likelier).
+
+5. Probabilistic modeling: the RMSEs of the trips wrt rodfutes may be replaced by probabilistic terms, e.g. by assuming the observation error to follow the distribution P(e)~exp(-alpha\*e^2) (making the SSE equal the log-likelihood).
 While this may seem more elegant and allow corresponding decision-making, the probabilities - even if can be approximated by such a model - may be too sensitive to the scale of the model (represented by alpha).
 
 ## Relevant Links
+Project presentation:
+https://docs.google.com/presentation/d/1Bj7gmMqxZy01rXaEYRNMPV5WiuhOmw9ZtTcVtFbSWaQ/edit?usp=sharing
 
 Hackathon homepage:
 https://civichack2019.hasadna.org.il/hackathon
