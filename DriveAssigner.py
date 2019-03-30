@@ -172,18 +172,19 @@ class BusSystem:
             self.drives = drives_orig
             draw()
 
-    def show_lines(self, trips_to_plot, drives, n_lines=2, best=True):
+    def show_lines(self, trips_to_plot, drives, n_lines=2,
+                   grid=False, best=True, **kargs):
         for k in trips_to_plot:
             l_ids = self.drives[k]['res'][1]
             l_ids = l_ids[:n_lines] if best else l_ids[-n_lines:]
             ll = [l for l in self.lines
                   if l.id in [l[1] for l in l_ids]]
-            d = [d for d in drives if d.id.split()[1]==k.split()[1]]
-            assert(len(d)==1, d)
+            d = [d for d in drives if d.id==k]
+            assert(len(d)==1), len(d)
             d = d[0]
             print(ll)
             print(d)
-            D.show_lines(ll, d, grid=False)
+            D.show_lines(ll, d, grid=grid, **kargs)
 
 class BusLine:
     def __init__(self, id, nodes):
