@@ -35,11 +35,19 @@ In addition, a data set of ~4000 trips was provided, split to equally train & te
 ## Methodology
 ### Data cleanup
 
-- Remove trips with too few observations, since the high similarity between many routes often requires observations from all along the trip. A threshold of 25 observations per trip was chosen according to the distribution of the number of observations (see distribution in output directory).
+- Remove trips with too few observations, since the high similarity between many routes often requires observations from all along the trip. A threshold of 25 observations per trip was chosen according to the distribution of the number of observations.
 
 - Remove empty observations (with 0 in either latitude or longitude).
 
 - Convert latitude and longitude, respectively, to y and x coordinates within a 2D map, with units of meters.
+
+| ![](https://github.com/ido90/Transportation/blob/master/output/train_group/1_tracks_lengths.png) |
+|:--:| 
+| *Distribution of the number of observations per trip* |
+
+| ![](https://github.com/ido90/Transportation/blob/master/output/train_group/bads/very_short_1.png) |
+|:--:| 
+| *A trip with only 3 observed points* |
 
 ### Route-ID assignment algorithm
 
@@ -71,13 +79,27 @@ In the partially-supported C++ implementation, it took ~15 seconds.
 ### Findings
 The following findings are demonstrated in the figures available in the output/ directory:
 
-1. In the data that was used in the hackathon, **all the reportd route IDs of the trips seem to be correct**.
+1. In the data that was used in the hackathon, **all the reported route IDs of the trips seem to be correct**.
 
 2. The current project **reconstructs the route IDs independently and successfully, most of the time with high plausibility and certainty**. In particular, there was **exactly 1 inconsistency** between the reconstructed and the reported route ID (out of more than 2K labeled trips).
 
+![](https://github.com/ido90/Transportation/blob/master/output/train_group/5_summary.png)
+
+| ![](https://github.com/ido90/Transportation/blob/master/output/train_group/bads/inconsistent_3868.png) |
+|:--:| 
+| *The only inconsistent trip: the blue route was reported whereas the red was chosen by the algorithm* |
+
 3. **Low plausibility** typically corresponds to trips with **radical outlier observations**, which probably express errors in the GPS or in the stored data. Interestingly, **the algorithm seems insensitive to these outliers**, and picks the right route ID nonetheless.
 
+| ![](https://github.com/ido90/Transportation/blob/master/output/train_group/bads/mse2.png) |
+|:--:| 
+| *Low plausibility: no plausible route due to outliers* |
+
 4. **Low certainty** typically corresponds to **very similar routes**, in particular in trips where no observations are available in the areas that distinct between the similar routes.
+
+| ![](https://github.com/ido90/Transportation/blob/master/output/train_group/bads/uncertain.png) |
+|:--:| 
+| *Low certainty: two plausible routes* |
 
 ## Possible Scale-up Extensions
 Several possible extensions to the project may be beneficial, in particular for larger scale of data:
